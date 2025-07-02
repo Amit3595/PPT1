@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>PPT Upload & Viewer</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f2f4f8;
+      color: #333;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 40px auto;
+      background: white;
+      padding: 30px 40px;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+    }
+
+    h2 {
+      text-align: center;
+      font-size: 28px;
+      margin-bottom: 30px;
+      color: #2a2a2a;
+    }
+
+    .upload-box {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    input[type="file"] {
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      margin-bottom: 10px;
+    }
+
+    button {
+      padding: 12px 25px;
+      font-size: 16px;
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    .ppt-list {
+      margin-top: 20px;
+    }
+
+    .ppt-list h3 {
+      margin-bottom: 15px;
+      font-size: 20px;
+    }
+
+    .ppt-item {
+      background: #f9f9f9;
+      padding: 12px 16px;
+      margin: 10px 0;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      transition: background 0.2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .ppt-item:hover {
+      background: #e6f0ff;
+    }
+
+    .ppt-icon {
+      font-size: 20px;
+      margin-right: 10px;
+      color: #ff5722;
+    }
+
+    iframe {
+      margin-top: 30px;
+      width: 100%;
+      height: 600px;
+      border: none;
+      border-radius: 10px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+    }
+
+    .viewer-title {
+      margin-top: 40px;
+      font-weight: 600;
+      font-size: 20px;
+      text-align: center;
+    }
+
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h2>Upload and View Your PPT Files</h2>
+
+    <div class="upload-box">
+      <input type="file" id="pptFile" accept=".ppt,.pptx" />
+      <br>
+      <button onclick="uploadToCloudinary()">Upload & Add to List</button>
+    </div>
+
+    <div class="ppt-list" id="pptList">
+      <h3>Uploaded Files</h3>
+      <div id="pptItems"></div>
+    </div>
+
+    <div id="pptViewer"></div>
+  </div>
+
+  <script>
+    const CLOUD_NAME = "dvzjbnvpd";
+    const UPLOAD_PRESET = "PPT_PPT";
+    const uploadedPPTs = [];
+
+    function uploadToCloudinary() {
+      const fileInput = document.getElementById("pptFile");
+      const file = fileInput.files[0];
+
+      if (!file) {
+        alert("Please select a .ppt or .pptx file.");
+        return;
+      }
+
+      const url = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`;
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("upload_preset", UPLOAD_PRESET);
+
+      fetch(url, {
+        method: "POST",
+        body: formData
+      })
+      .then(res => res.json())
+      .then(data => {
+        const fileUrl = data.secure_url;
+        const fileName = file.name;
+        uploadedPPTs.push({ name: fileName, url: fileUrl });
+        updatePPTList();
+      })
+      .catch(err => {
+        console.error("Upload Error:", err);
+        alert("Upload failed. Please try again.");
+      });
+    }
+
+    function updatePPTList() {
+      const pptItemsContainer = document.getElementById("pptItems");
+      pptItemsContainer.innerHTML = "";
+
+      uploadedPPTs.forEach((ppt) => {
+        const div = document.createElement("div");
+        div.className = "ppt-item";
+        div.innerHTML = `<span class="ppt-icon">📄</span> ${ppt.name}`;
+        div.onclick = () => showPPT(ppt.url, ppt.name);
+        pptItemsContainer.appendChild(div);
+      });
+    }
+
+    function showPPT(fileUrl, fileName) {
+      const encodedUrl = encodeURIComponent(fileUrl);
+      const viewerUrl = `https://view.officeapps.live.com/op/view.aspx?src=${encodedUrl}`;
+
+      document.getElementById("pptViewer").innerHTML = `
+        <div class="viewer-title">Viewing: ${fileName}</div>
+        <iframe src="${viewerUrl}" allowfullscreen></iframe>
+      `;
+    }
+  </script>
+
+</body>
+</html>
